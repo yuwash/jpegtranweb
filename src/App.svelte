@@ -1,16 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Moveable from "svelte-moveable";
-  import { calculateCropBox, type CropBox } from './lib/cropBox';
   import { tinykeys } from "tinykeys";
 
-  // Types
-  type ImageInfo = {
-    current: string;
-    prev: string | null;
-    next: string | null;
-    total: number;
-  };
+  import { calculateCropBox, type CropBox } from './lib/cropBox';
+  import { Client, type ImageInfo, EXAMPLE_IMAGE_ID } from './lib/client';
 
   type AspectRatio = {
     name: string;
@@ -18,8 +12,9 @@
   };
 
   // Constants
-  const EXAMPLE_IMAGE = '/image/example';
-  // const EXAMPLE_IMAGE = 'https://placehold.co/640x360';
+  const API_CLIENT = new Client();
+  const EXAMPLE_IMAGE_URL = API_CLIENT.getImageUrl(EXAMPLE_IMAGE_ID);
+  // const EXAMPLE_IMAGE_URL = 'https://placehold.co/640x360';
   const CROPBOX_MOVE_STEP = 0.1;  // Relative to image size (width resp. height)
 
   // State
@@ -48,20 +43,8 @@
   async function loadImageInfo(index: number) {
     currentIndex = index;
     try {
-      const response = await fetch(`/iter/${index}`);
-      const data = await response.json();
-      if (!response.ok) {
-        message = data.description || 'Failed to load image';
-        imageInfo = null;
-      } else {
-        imageInfo = {
-          current: data.current,
-          prev: data.prev,
-          next: data.next,
-          total: data.total
-        };
-        message = '';
-      }
+      imageInfo = await API_CLIENT.iter(index);
+      message = '';
     } catch (error) {
       console.error('Failed to load image info:', error);
       message = 'Error loading image';
@@ -112,31 +95,20 @@
     if (!scaledBox || !imageElement || !imageInfo?.current ) return;
 
     try {
-      const response = await fetch(`/tran/${imageInfo.current}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          box: scaledBox,
-          aspectRatio: selectedRatio.value
-        })
+      const responseText = await API_CLIENT.tran(imageInfo.current, {
+        box: scaledBox,
+        aspectRatio: selectedRatio.value
       });
+      message = 'Image cropped successfully';
 
-      if (response.ok) {
-        message = 'Image cropped successfully';
-        // Reload the image to show changes
-        await fetch(`/image/${imageInfo.current}`);
-        imageElement.src = `/image/${imageInfo.current}?refresh=${Date.now()}`;
-        initializeCropBox();
-      } else {
-        // const error = await response.json();
-        const responseText = await response.text();
-        message = `Failed to crop: ${responseText || 'Unknown error'}`;
-      }
+      // Reload the image to show changes
+      const currentImageUrl = API_CLIENT.getImageUrl(imageInfo.current);
+      await fetch(currentImageUrl);
+      imageElement.src = `${currentImageUrl}?refresh=${Date.now()}`;
+      initializeCropBox();
     } catch (error) {
       console.error('Failed to crop image:', error);
-      message = 'Failed to crop image';
+      message = `Failed to crop image: ${error.message}`;
     }
   }
 
@@ -253,7 +225,7 @@
           <div class="image-container" bind:this={imageContainerElement}>
             <img
               bind:this={imageElement}
-              src={imageInfo?.current ? `/image/${imageInfo.current}` : EXAMPLE_IMAGE}
+              src={imageInfo?.current ? API_CLIENT.getImageUrl(imageInfo.current) : EXAMPLE_IMAGE_URL}
               alt="Current image"
               on:load={initializeCropBox}
             >

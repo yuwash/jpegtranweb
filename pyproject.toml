@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "jpegtranweb-server"
+version = "0.1.0"
+description = ""
+authors = ["Yushin Washio <dev@yuwash.eu>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "jpegtranweb_server"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+flask = "^3.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

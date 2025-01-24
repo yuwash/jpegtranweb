@@ -184,8 +184,8 @@
 
   onMount(() => {
     tinykeys(window, {
-      'Shift+n': () => loadImageInfo(currentIndex - 1),
-      'n': () => loadImageInfo(currentIndex + 1),
+      'Shift+n': () => imageInfo?.prev && loadImageInfo(currentIndex - 1),
+      'n': () => imageInfo?.next && loadImageInfo(currentIndex + 1),
       'ArrowUp': () => moveCropBoxStepwise(0, -1),
       'ArrowDown': () => moveCropBoxStepwise(0, 1),
       'ArrowLeft': () => moveCropBoxStepwise(-1, 0),

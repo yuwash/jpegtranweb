@@ -43,3 +43,11 @@ export function calculateCropBox(
     bottom: top + boxHeight
   };
 }
+
+export function renderJpegtranCropSpec(cropBox: CropBox): string {
+  return (
+    `${cropBox.right - cropBox.left}x` +
+    `${cropBox.bottom - cropBox.top}+` +
+    `${cropBox.left}+${cropBox.top}`
+  );
+}

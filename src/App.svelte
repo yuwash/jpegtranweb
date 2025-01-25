@@ -3,7 +3,7 @@
   import Moveable from "svelte-moveable";
   import { tinykeys } from "tinykeys";
 
-  import { calculateCropBox, type CropBox } from './lib/cropBox';
+  import { calculateCropBox, renderJpegtranCropSpec, type CropBox } from './lib/cropBox';
   import { Client, type ImageInfo, EXAMPLE_IMAGE_ID } from './lib/client';
 
   type AspectRatio = {
@@ -117,14 +117,6 @@
     }
   }
 
-  function showCropBoxMessage() {
-    const cropBox = getOriginalScaleCropBox();
-    if (cropBox) {
-      message = `${JSON.stringify(cropBox)}`;
-      messageClass = '';
-    }
-  }
-
   function moveCropBox(deltaX: number, deltaY: number) {
     if (!imageElement) return;
 
@@ -145,7 +137,6 @@
       right: newLeft + cropBoxWidth,
       bottom: newTop + cropBoxHeight
     };
-    showCropBoxMessage();
     // This function is called on drag, so no need to update moveable.
     // Otherwise, caller should additionally call updateMoveable.
   }
@@ -280,6 +271,26 @@
           </button>
         </div>
       </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Left</th>
+            <th>Right</th>
+            <th>Top</th>
+            <th>Bottom</th>
+            <th>Jpegtran Crop Spec</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{cropBox.left}</td>
+            <td>{cropBox.right}</td>
+            <td>{cropBox.top}</td>
+            <td>{cropBox.bottom}</td>
+            <td><code>{cropBox && renderJpegtranCropSpec(cropBox)}</code></td>
+          </tr>
+        </tbody>
+      </table>
       {#if message}
         <div class="grid-x grid-padding-x align-center">
           <div class="cell medium-6">

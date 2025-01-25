@@ -153,8 +153,8 @@
   function moveCropBoxStepwise(stepsX: number, stepsY: number) {
     if (!imageElement) return;
     moveCropBox(
-      stepsX * imageElement.width * CROPBOX_MOVE_STEP,
-      stepsY * imageElement.height * CROPBOX_MOVE_STEP
+      Math.floor(stepsX * imageElement.width * CROPBOX_MOVE_STEP),
+      Math.floor(stepsY * imageElement.height * CROPBOX_MOVE_STEP)
     );
     updateMoveable();
     cropButton?.focus();

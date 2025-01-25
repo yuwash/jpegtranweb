@@ -20,31 +20,21 @@ export function calculateCropBox(
   let boxWidth: number;
   let boxHeight: number;
 
-  if (aspectRatio > imageRatio) {
+  if (aspectRatio < imageRatio) {
     // Desired ratio is wider than image ratio - maximize height
     boxHeight = imgHeight;
-    boxWidth = imgHeight * aspectRatio;
+    boxWidth = Math.min(Math.floor(imgHeight * aspectRatio), imgWidth);
+    // Use of imgWidth may be necessary when aspectRatio is close to imageRatio
   } else {
     // Desired ratio is taller than image ratio - maximize width
     boxWidth = imgWidth;
-    boxHeight = imgWidth / aspectRatio;
-  }
-
-  // If calculated dimensions exceed image bounds, scale down
-  if (boxWidth > imgWidth) {
-    const scale = imgWidth / boxWidth;
-    boxWidth *= scale;
-    boxHeight *= scale;
-  }
-  if (boxHeight > imgHeight) {
-    const scale = imgHeight / boxHeight;
-    boxWidth *= scale;
-    boxHeight *= scale;
+    boxHeight = Math.min(Math.floor(imgWidth / aspectRatio), imgHeight);
+    // Use of imgHeight may be necessary when aspectRatio is close to imageRatio
   }
 
   // Center the box
-  const left = (imgWidth - boxWidth) / 2;
-  const top = (imgHeight - boxHeight) / 2;
+  const left = Math.floor((imgWidth - boxWidth) / 2);
+  const top = Math.floor((imgHeight - boxHeight) / 2);
 
   return {
     left,

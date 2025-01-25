@@ -8,7 +8,7 @@ On ubuntu you can install the package `libjpeg-turbo-progs`.
 
 ## Features
 
-![Cropping UI](docs/cropping-ui.png)
+![Cropping UI](docs/screenshot-jpegtranweb.png)
 
 * Draggable crop box to interactively select the area you want to crop.
 * Optimized for finding the maximum cropping area for the given aspect ratio.

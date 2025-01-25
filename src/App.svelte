@@ -23,6 +23,7 @@
   let selectedRatio: AspectRatio;
   let cropBox: CropBox = { left: 0, top: 0, right: 0, bottom: 0 };
   let message = '';
+  let messageClass = '';
   let moveableInstance: any = null;
   let imageElement: HTMLImageElement | null = null;
   let cropButton: HTMLButtonElement | null = null;
@@ -45,9 +46,11 @@
     try {
       imageInfo = await API_CLIENT.iter(index);
       message = '';
+      messageClass = '';
     } catch (error) {
       console.error('Failed to load image info:', error);
       message = 'Error loading image';
+      messageClass = 'alert';
       imageInfo = null;
     }
     
@@ -100,6 +103,7 @@
         aspectRatio: selectedRatio.value
       });
       message = 'Image cropped successfully';
+      messageClass = 'success';
 
       // Reload the image to show changes
       const currentImageUrl = API_CLIENT.getImageUrl(imageInfo.current);
@@ -109,6 +113,7 @@
     } catch (error) {
       console.error('Failed to crop image:', error);
       message = `Failed to crop image: ${error.message}`;
+      messageClass = 'alert';
     }
   }
 
@@ -116,6 +121,7 @@
     const cropBox = getOriginalScaleCropBox();
     if (cropBox) {
       message = `${JSON.stringify(cropBox)}`;
+      messageClass = '';
     }
   }
 
@@ -277,7 +283,7 @@
       {#if message}
         <div class="grid-x grid-padding-x align-center">
           <div class="cell medium-6">
-            <div class="callout">{message}</div>
+            <div class="callout {messageClass}">{message}</div>
           </div>
         </div>
       {/if}

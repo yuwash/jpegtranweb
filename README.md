@@ -6,6 +6,16 @@ It also uses `rdjpgcom` for getting the image dimensions.
 Both programs are included in libjpeg.
 On ubuntu you can install the package `libjpeg-turbo-progs`.
 
+## Usage
+
+* Install frontend requirements with `npm install`.
+* Install backend requirements with `poetry install`.
+* Build frontend with `npm run build` (will build into `dist` which is linked from `backend/static`).
+ * Alternatively you can also start the development server with `npm run dev`.
+* Run server with `poetry run python -m flask --app backend.app run`.
+* Navigate with your browser to `http://localhost:5000` (in case of running the vite development server: the URL printed in the shell).
+* It will create the folder `~/.jpegtranweb/collection`. Put your images in there. They will be overwritten when you crop.
+
 ## Features
 
 ![Cropping UI](docs/screenshot-jpegtranweb.png)

@@ -16,6 +16,7 @@
   const EXAMPLE_IMAGE_URL = API_CLIENT.getImageUrl(EXAMPLE_IMAGE_ID);
   // const EXAMPLE_IMAGE_URL = 'https://placehold.co/640x360';
   const CROPBOX_MOVE_STEP = 0.1;  // Relative to image size (width resp. height)
+  const SHELL_SCRIPT_OUTFILE_SUFFIX = '-tran';
 
   // State
   let currentIndex = 0;
@@ -29,6 +30,7 @@
   let cropButton: HTMLButtonElement | null = null;
   let cropBoxElement: HTMLDivElement | null = null;
   let imageContainerElement: HTMLDivElement | null = null;
+  let shellScript = '';
 
   const aspectRatios: AspectRatio[] = [
     { name: '16:9', value: [16, 9] },
@@ -151,6 +153,12 @@
     cropButton?.focus();
   }
 
+  function addCropCommandToScript() {
+    if (!imageInfo?.current || !cropBox) return;
+    const outfileName = imageInfo.current.replace(/(\.[^\.]+)$/, `${SHELL_SCRIPT_OUTFILE_SUFFIX}$1`);
+    shellScript += `jpegtran -crop ${renderJpegtranCropSpec(cropBox)} -copy all -outfile ${outfileName} ${imageInfo.current}\n`;
+  }
+
   onMount(() => {
     tinykeys(window, {
       'Shift+n': () => imageInfo?.prev && loadImageInfo(currentIndex - 1),
@@ -269,6 +277,17 @@
               Crop
             {/if}
           </button>
+          <button
+            class="button"
+            disabled={isExampleImage}
+            on:click={addCropCommandToScript}
+          >
+            {#if isExampleImage}
+              Cannot add crop command for example image
+            {:else}
+              Add crop command to script
+            {/if}
+          </button>
         </div>
       </div>
       <table>
@@ -297,6 +316,9 @@
             <div class="callout {messageClass}">{message}</div>
           </div>
         </div>
+      {/if}
+      {#if shellScript}
+        <pre class="code-block">{shellScript}</pre>
       {/if}
     </div>
   </div>

@@ -29,8 +29,11 @@
   let imageElement: HTMLImageElement | null = null;
   let cropButton: HTMLButtonElement | null = null;
   let cropBoxElement: HTMLDivElement | null = null;
+  let addToScriptButton: HTMLButtonElement | null = null;
   let imageContainerElement: HTMLDivElement | null = null;
   let shellScript = '';
+  let addToScriptIsPreferred: boolean = false;
+  let addToScriptIsSuggested: boolean = true;  // Until imageInfo is loaded.
 
   const aspectRatios: AspectRatio[] = [
     { name: '16:9', value: [16, 9] },
@@ -98,6 +101,7 @@
   async function cropImage() {
     const scaledBox = getOriginalScaleCropBox();
     if (!scaledBox || !imageElement || !imageInfo?.current ) return;
+    addToScriptIsPreferred = false;
 
     try {
       const responseText = await API_CLIENT.tran(imageInfo.current, {
@@ -150,13 +154,22 @@
       Math.floor(stepsY * imageElement.height * CROPBOX_MOVE_STEP)
     );
     updateMoveable();
-    cropButton?.focus();
+    focusSuggestedButton();
   }
 
   function addCropCommandToScript() {
     if (!imageInfo?.current || !cropBox) return;
+    addToScriptIsPreferred = true;
     const outfileName = imageInfo.current.replace(/(\.[^\.]+)$/, `${SHELL_SCRIPT_OUTFILE_SUFFIX}$1`);
     shellScript += `jpegtran -crop ${renderJpegtranCropSpec(cropBox)} -copy all -outfile ${outfileName} ${imageInfo.current}\n`;
+  }
+
+  function focusSuggestedButton() {
+    if ((addToScriptIsSuggested || !cropButton) && addToScriptButton) {
+      addToScriptButton.focus();
+    } else {
+      cropButton?.focus();
+    }
   }
 
   onMount(() => {
@@ -176,6 +189,10 @@
   }
 
   $: isExampleImage = !imageInfo?.current;
+
+  $: addToScriptIsSuggested = (
+    (imageInfo?.current)? addToScriptIsPreferred : true
+  );
 </script>
 
 <main class="grid-container fluid">
@@ -281,6 +298,7 @@
             class="button"
             disabled={isExampleImage}
             on:click={addCropCommandToScript}
+            bind:this={addToScriptButton}
           >
             {#if isExampleImage}
               Cannot add crop command for example image

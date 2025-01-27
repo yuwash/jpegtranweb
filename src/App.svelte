@@ -11,6 +11,11 @@
     value: number[];
   };
 
+  type OpenedFile = {
+    file: File;
+    imageInfo: ImageInfo;
+  };
+
   // Constants
   const API_CLIENT = new Client();
   const EXAMPLE_IMAGE_URL = API_CLIENT.getImageUrl(EXAMPLE_IMAGE_ID);
@@ -19,6 +24,8 @@
   const SHELL_SCRIPT_OUTFILE_SUFFIX = '-tran';
 
   // State
+  let isExampleImage: boolean;
+  let isOpenedFile: boolean;
   let currentIndex = 0;
   let imageInfo: ImageInfo | null = null;
   let selectedRatio: AspectRatio;
@@ -28,12 +35,15 @@
   let moveableInstance: any = null;
   let imageElement: HTMLImageElement | null = null;
   let cropButton: HTMLButtonElement | null = null;
+  let openFileInputElement: HTMLInputElement | null = null;
   let cropBoxElement: HTMLDivElement | null = null;
   let addToScriptButton: HTMLButtonElement | null = null;
   let imageContainerElement: HTMLDivElement | null = null;
   let shellScript = '';
   let addToScriptIsPreferred: boolean = false;
   let addToScriptIsSuggested: boolean = true;  // Until imageInfo is loaded.
+  const openedFiles: OpenedFile[] = [];
+  let openFileBlobUrl: string | null = null;
 
   const aspectRatios: AspectRatio[] = [
     { name: '16:9', value: [16, 9] },
@@ -48,15 +58,27 @@
   // Functions
   async function loadImageInfo(index: number) {
     currentIndex = index;
-    try {
-      imageInfo = await API_CLIENT.iter(index);
-      message = '';
-      messageClass = '';
-    } catch (error) {
-      console.error('Failed to load image info:', error);
-      message = 'Error loading image';
-      messageClass = 'alert';
-      imageInfo = null;
+    if(isOpenedFile) {
+      const openedFile = openedFiles[currentIndex];
+      if (!openedFile?.file) {
+        message = 'Unknown error: file is missing';
+        messageClass = 'alert';
+        imageInfo = null;
+        return;
+      }
+      openFileBlobUrl = URL.createObjectURL(openedFile.file);
+      imageInfo = openedFile.imageInfo;
+    } else {
+      try {
+        imageInfo = await API_CLIENT.iter(index);
+        message = '';
+        messageClass = '';
+      } catch (error) {
+        console.error('Failed to load image info:', error);
+        message = 'Error loading image';
+        messageClass = 'alert';
+        imageInfo = null;
+      }
     }
     
     // Reset crop box when image changes, regardless of success/failure
@@ -172,8 +194,36 @@
     }
   }
 
+  async function handleOpenFile(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    
+    if (file) {
+      openFileBlobUrl = URL.createObjectURL(file);
+      currentIndex = openedFiles.length;
+      const lastOpenedFile = openedFiles[currentIndex - 1];
+      imageInfo = {
+        current: file.name,
+        prev: lastOpenedFile?.imageInfo?.current || null,
+        next: null,
+        total: currentIndex + 1
+      };
+      if(lastOpenedFile){
+        lastOpenedFile.imageInfo.next = imageInfo.current;
+        for (let openedFile of openedFiles) {
+          openedFile.imageInfo.total = imageInfo.total;
+        }
+      }
+      openedFiles.push({ file, imageInfo });
+      isOpenedFile = true;
+      message = `Opened ${file.name}`;
+      messageClass = '';
+    }
+  }
+
   onMount(() => {
     tinykeys(window, {
+      'o': () => openFileInputElement?.click(),
       'Shift+n': () => imageInfo?.prev && loadImageInfo(currentIndex - 1),
       'n': () => imageInfo?.next && loadImageInfo(currentIndex + 1),
       'ArrowUp': () => moveCropBoxStepwise(0, -1),
@@ -188,10 +238,10 @@
     initializeCropBox();
   }
 
-  $: isExampleImage = !imageInfo?.current;
+  $: isExampleImage = !isOpenedFile && !imageInfo?.current;
 
   $: addToScriptIsSuggested = (
-    (imageInfo?.current)? addToScriptIsPreferred : true
+    (imageInfo?.current && !isOpenedFile)? addToScriptIsPreferred : true
   );
 </script>
 
@@ -200,9 +250,9 @@
     <div class="cell">
       <div class="grid-x grid-padding-x">
         <div class="cell small-4 text-left">
-          <button 
+          <button
             class="button small"
-            disabled={!imageInfo?.prev} 
+            disabled={!imageInfo?.prev}
             on:click={() => loadImageInfo(currentIndex - 1)}
           >
             Previous {imageInfo?.prev !== null ? `(${currentIndex - 1})` : ''}
@@ -216,9 +266,18 @@
           {/if}
         </div>
         <div class="cell small-4 text-right">
-          <button 
+          <label for="open-file" class="button small">Open JPEG image</label>
+          <input
+            type="file"
+            id="open-file"
+            accept=".jpg, .jpeg"
+            bind:this={openFileInputElement}
+            on:change={handleOpenFile}
+            style="display: none;"
+          />
+          <button
             class="button small"
-            disabled={!imageInfo?.next} 
+            disabled={!imageInfo?.next}
             on:click={() => loadImageInfo(currentIndex + 1)}
           >
             Next {imageInfo?.next !== null ? `(${currentIndex + 1})` : ''}
@@ -247,7 +306,7 @@
           <div class="image-container" bind:this={imageContainerElement}>
             <img
               bind:this={imageElement}
-              src={imageInfo?.current ? API_CLIENT.getImageUrl(imageInfo.current) : EXAMPLE_IMAGE_URL}
+              src={openFileBlobUrl ? openFileBlobUrl : imageInfo?.current ? API_CLIENT.getImageUrl(imageInfo.current) : EXAMPLE_IMAGE_URL}
               alt="Current image"
               on:load={initializeCropBox}
             >
@@ -283,13 +342,15 @@
         <div class="cell shrink">
           <button 
             class="button"
-            disabled={!imageInfo} 
+            disabled={!imageInfo || isOpenedFile} 
             on:click={cropImage}
             bind:this={cropButton}
             on:keydown={(event) => { if (event.key === 'Enter') { cropImage(); } }}
           >
             {#if isExampleImage}
               Cannot crop example image
+            {:else if isOpenedFile}
+              Can only crop images in the collection
             {:else}
               Crop
             {/if}

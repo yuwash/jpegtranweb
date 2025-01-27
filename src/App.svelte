@@ -74,12 +74,17 @@
         messageClass = '';
       } catch (error) {
         console.error('Failed to load image info:', error);
-        message = 'Error loading image';
+        message = 'Failed to load image info. Server may not be running. Showing example image. You can open a file for serverless usage.';
         messageClass = 'alert';
         imageInfo = null;
+        return;
+      }
+      if(imageInfo.total === 0){
+        message = 'Please add your images into the collection. Showing example image. You can also open a file for serverless usage.';
+        messageClass = 'warning';
       }
     }
-    
+
     // Reset crop box when image changes, regardless of success/failure
     if (imageElement) {
       initializeCropBox();
@@ -88,7 +93,7 @@
 
   function initializeCropBox() {
     if (!imageElement) return;
-    
+
     cropBox = calculateCropBox(
       { width: imageElement.width, height: imageElement.height },
       selectedRatio.value[0] / selectedRatio.value[1]
@@ -341,7 +346,7 @@
         <div class="cell shrink">
           <button 
             class="button"
-            disabled={!imageInfo || isOpenedFile} 
+            disabled={isExampleImage || isOpenedFile}
             on:click={cropImage}
             bind:this={cropButton}
             on:keydown={(event) => { if (event.key === 'Enter') { cropImage(); } }}

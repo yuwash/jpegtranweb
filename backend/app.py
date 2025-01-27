@@ -16,9 +16,6 @@ app = Flask(__name__, static_url_path="")
 COLLECTION_PATH = Path(os.path.expanduser("~/.jpegtranweb/collection"))
 COLLECTION_PATH.mkdir(parents=True, exist_ok=True)
 
-# Example image path
-EXAMPLE_IMAGE_PATH = Path(__file__).parent / "example.jpg"
-
 
 @dataclass
 class CropBox:
@@ -92,11 +89,6 @@ def get_iteration(i: int):
 @app.route("/image/<filename>")
 def get_image(filename: str):
     """Serve an image file."""
-    if filename == "example":
-        if not EXAMPLE_IMAGE_PATH.is_file():
-            raw_abort(404, description="Example image not found")
-        return send_file(EXAMPLE_IMAGE_PATH)
-        
     file_path = COLLECTION_PATH / filename
     if not file_path.is_file():
         abort(404)

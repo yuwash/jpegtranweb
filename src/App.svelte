@@ -2,9 +2,10 @@
   import { onMount } from 'svelte';
   import Moveable from "svelte-moveable";
   import { tinykeys } from "tinykeys";
+  import exampleImageUrl from './assets/example.jpg'
 
   import { calculateCropBox, renderJpegtranCropSpec, type CropBox } from './lib/cropBox';
-  import { Client, type ImageInfo, EXAMPLE_IMAGE_ID } from './lib/client';
+  import { Client, type ImageInfo } from './lib/client';
 
   type AspectRatio = {
     name: string;
@@ -18,8 +19,6 @@
 
   // Constants
   const API_CLIENT = new Client();
-  const EXAMPLE_IMAGE_URL = API_CLIENT.getImageUrl(EXAMPLE_IMAGE_ID);
-  // const EXAMPLE_IMAGE_URL = 'https://placehold.co/640x360';
   const CROPBOX_MOVE_STEP = 0.1;  // Relative to image size (width resp. height)
   const SHELL_SCRIPT_OUTFILE_SUFFIX = '-tran';
 
@@ -306,7 +305,7 @@
           <div class="image-container" bind:this={imageContainerElement}>
             <img
               bind:this={imageElement}
-              src={openFileBlobUrl ? openFileBlobUrl : imageInfo?.current ? API_CLIENT.getImageUrl(imageInfo.current) : EXAMPLE_IMAGE_URL}
+              src={openFileBlobUrl ? openFileBlobUrl : imageInfo?.current ? API_CLIENT.getImageUrl(imageInfo.current) : exampleImageUrl}
               alt="Current image"
               on:load={initializeCropBox}
             >

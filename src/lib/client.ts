@@ -5,8 +5,6 @@ export type ImageInfo = {
   total: number;
 };
 
-export const EXAMPLE_IMAGE_ID = 'example';
-
 export class Client {
   private apiUrlBase: string;
 

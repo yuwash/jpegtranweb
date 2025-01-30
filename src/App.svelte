@@ -320,6 +320,7 @@
                 target={cropBoxElement}
                 draggable={true}
                 origin={false}
+                renderDirections={false}
                 onDrag={({ delta: [dx, dy] }) => moveCropBox(dx, dy)}
               />
               <div 

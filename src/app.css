@@ -25,6 +25,7 @@ img {
   position: absolute;
   background-color: Highlight;
   opacity: 0.5;
+  border: 0.1rem solid HighlightText;
   cursor: move;
 }
 
@@ -42,4 +43,10 @@ img {
 .image-credit a {
   color: white;
   text-decoration: underline;
+}
+
+.moveable-line {
+  /* We applied renderDirections={false} but somehow it’s not working,
+   * therefore this hack. */
+  display: none;
 }
